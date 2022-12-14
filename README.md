@@ -1,5 +1,5 @@
-#original R package came from:https://github.com/mayer79/confintr
-#deployed website: https://jhu-statprogramming-fall-2022.github.io/biostat840-project3-pkgdown-chyzheng/
+##original R package came from:https://github.com/mayer79/confintr
+##deployed website: https://jhu-statprogramming-fall-2022.github.io/biostat840-project3-pkgdown-chyzheng/
 
 5 changes to the pkgdown website:
 change the theme to skethy;
