@@ -1,11 +1,11 @@
-original R package came from:https://github.com/mayer79/confintr
-deployed website: 
+#original R package came from:https://github.com/mayer79/confintr
+#deployed website: https://jhu-statprogramming-fall-2022.github.io/biostat840-project3-pkgdown-chyzheng/
 
 5 changes to the pkgdown website:
-change the theme to skethy
-change the background color of the code portion
-change the structure of navigation bar
-change the footer
+change the theme to skethy;
+change the background color of the code portion;
+change the structure of navigation bar;
+change the footer;
 change the side bar
 
 The author of the package:mayer79
