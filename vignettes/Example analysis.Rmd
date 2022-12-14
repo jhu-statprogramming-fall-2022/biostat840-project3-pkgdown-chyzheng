@@ -1,0 +1,124 @@
+---
+title: "Example Analysis for confintr package"
+author: "Chunyan Zheng"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Example Analysis for confintr package}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+##Study question
+I want to study the food consumption worldwide and which country consume food with more CO2 emission.
+
+##original data
+The original dataset is from from nu3 and was contributed by Kasia Kulma. The dataset used here is from TidyTuesday, Feb 18, 2020. (https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-02-18/food_consumption.csv)
+
+##data dictionary
+https://github.com/rfordatascience/tidytuesday/blob/master/data/2020/2020-02-18/readme.md#data-dictionary
+
+#load data
+```{r}
+library(here)
+library(tidyverse)
+if(!dir.exists(here("data"))) { dir.create(here("data")) }
+
+if(!file.exists(here("data","food.RDS"))) {
+  csv <- 'https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-02-18/food_consumption.csv'
+  food <- readr::read_csv(csv)
+  
+  # save the file to RDS objects
+  saveRDS(food, file= here("data","food.RDS"))
+}
+
+food <- readRDS(here("data","food.RDS"))
+```
+
+## what's the top 10 countries that consume the most food per person year?
+```{r}
+food_csption<-food|>select(country, consumption) |>group_by(country)|>summarise(total_consumption=sum(consumption))|>arrange(desc(total_consumption))|>slice(1:10)
+ggplot(food_csption, aes(y=total_consumption,
+                  x=reorder(country, -total_consumption)))+
+  geom_point() + 
+  geom_segment(aes(x=country, 
+                   xend=country, 
+                   y=0, 
+                   yend=total_consumption))+
+  labs(title = "Top 10 countries consuming food",
+  subtitle = "graph of the top 10 contries which consume the most food per person per year",
+  caption="created by Chunyan Zheng")+
+  ylab("total consumption/person/year") + xlab("country")+
+  theme(axis.text.x = element_text(angle = 60, hjust=1, size =8),
+    plot.title = element_text(color="cadetblue", size=15, face="bold.italic"),
+    plot.subtitle=element_text(size=8,color="black"),
+    axis.title.x = element_text(color="azure4", size=14, face="bold"),
+    axis.title.y = element_text(color="cornflowerblue", size=14, face="bold"))
+```
+
+## what's the type of food that cause most emmission of CO2?
+```{r}
+food_mean<-food|>select(food_category,co2_emmission)|>group_by(food_category)|>summarise(mean_emmission=mean(co2_emmission))|>arrange(desc(mean_emmission))
+
+ggplot(food_mean, aes(x="", y=mean_emmission, fill=food_category)) +
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0)+theme_void()+
+  labs(title = "Mean co2 emmission for different food",
+  subtitle = "Pie chart of mean emmission of CO2 for different food categories",
+  caption="created by Chunyan Zheng")+
+  theme(plot.title = element_text(color="cadetblue", size=15, face="bold.italic"),
+    plot.subtitle=element_text(size=8,color="black"))
+
+```
+
+## what's the top 10 countries that conume food emitting CO2?
+```{r}
+emmission<-food|>select(country, co2_emmission)
+emmission<-lapply(split(emmission, emmission$country, drop=TRUE), subset, select = -country)|>map_dfc(.f = ~mean(.x$co2_emmission))
+emmission<-t(emmission)
+emmission<-keep(emmission, ~ .x > 143)
+emmission<-emmission
+emmission<-sort(emmission, decreasing = TRUE,)
+emmission
+emmission<-set_names(emmission, c("Argentina", "Australia", "Albania", "New Zealand", "Iceland", "USA", "Uruguay", "Brazil", "Luxembourg", "Kazakhstan"))
+emmission<- enframe(emmission)
+emmission<-emmission|>rename(country=name, mean_co2=value)
+emmission
+ggplot(emmission, aes(x=mean_co2,
+                  y= fct_reorder(.f = country, .x = mean_co2)))+
+  geom_col(width=0.5)+
+  labs(title = "Mean Co2 emmission for top 10 countries",
+  subtitle = "Bar chart of mean emmission of CO2 for 10 countries which has the most co2 emmission per person year",
+  caption="created by Chunyan Zheng")+
+  ylab("Country") + xlab("Mean CO2 emmission (kg CO2/person/year)")+
+  theme(axis.text.x = element_text(angle = 60, hjust=1, size =8),
+    plot.title = element_text(color="cadetblue", size=15, face="bold.italic"),
+    plot.subtitle=element_text(size=8,color="black"),
+    axis.title.x = element_text(color="azure4", size=14, face="bold"),
+    axis.title.y = element_text(color="cornflowerblue", size=14, face="bold"))
+
+```
+
+```{r}
+library(confintr)
+overall_mean<-ci_mean(food$co2_emmission)
+overall_mean
+overall_IQR<-ci_IQR(food$co2_emmission, R = 3000)
+overall_IQR
+```
+##from the above analysis, we can see that Finland consume the most food per person year. However, even though the total amount of food consumed by Finland is the highest, it is not in the top 10 carbon emmission, which means that people in Finland consume food with less carbon emmission then those top 10 countries with highest emmission. Also, compared to the mean carbon emmission worldwide, the country with most emission produce 123.11 kg co2/person/year.
+
+## Function used
+
+\-'dplyr':`select()', 'group_by()', 'summarise()', 'arrange()', 'slice()'
+\-'forcats': 'fct_reorder()'
+\-'purrr': 'map_dfc()', 'set_names()'
+\-'confintr': 'ci_mean', 'ci_IQR'
+\-'ggplot2': 'geom_point()', 'geom_segment()', 'geom_col()', 'geom_bar()'

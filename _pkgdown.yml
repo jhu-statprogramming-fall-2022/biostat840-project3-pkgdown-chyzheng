@@ -1,0 +1,20 @@
+url: ~
+template:
+  bootstrap: 5
+  bootswatch: sketchy
+  theme: github-light
+navbar:
+  structure:
+    left:  [intro, reference, articles, tutorials, github]
+    right: [search, news]
+footer:
+  structure:
+    left: built_with
+    right: developed_by
+home:
+  sidebar:
+    structure: [authors, custom, toc, dev]
+    components:
+      custom:
+        title: pkgdown website
+        text: this website is built by Chunyan Zheng
